@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#07090d" />
+    <title>SignaGlove 3D · Simulador de guante traductor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@500;600;700&display=swap"
+    />
+    <link rel="stylesheet" href="/src/styles/main.css" />
+    <!-- Solo se usa si se abre sin Vite (p. ej. Live Server). -->
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32" fill="none">
+              <rect x="5" y="12" width="4" height="13" rx="2" fill="currentColor" opacity=".55" />
+              <rect x="11" y="6" width="4" height="19" rx="2" fill="currentColor" />
+              <rect x="17" y="4" width="4" height="21" rx="2" fill="currentColor" opacity=".85" />
+              <rect x="23" y="9" width="4" height="16" rx="2" fill="currentColor" opacity=".7" />
+            </svg>
+          </span>
+          <div class="brand-text">
+            <span class="brand-name">SignaGlove <em>3D</em></span>
+            <span class="brand-sub">Simulador de guante traductor de lengua de señas</span>
+          </div>
+        </div>
+
+        <div class="topbar-meta">
+          <span class="pill" id="model-status" data-state="loading"><i aria-hidden="true"></i><span>Cargando modelo</span></span>
+          <span class="pill pill-mono" id="fps-counter">-- FPS</span>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <section class="stage" aria-label="Vista 3D de la prótesis">
+          <div id="scene-container" class="stage-canvas"></div>
+
+          <div class="stage-loader" id="stage-loader" role="status">
+            <div class="loader-ring" aria-hidden="true"></div>
+            <p>Cargando prótesis <span id="loader-progress" class="mono">0%</span></p>
+            <div class="loader-track"><span id="loader-bar"></span></div>
+          </div>
+
+          <div class="hud hud-detect" id="hud-detect" data-state="idle" aria-live="polite">
+            <span class="hud-kicker">Seña detectada</span>
+            <div class="hud-main">
+              <div class="hud-letter" id="detected-letter">—</div>
+              <div class="hud-body">
+                <strong id="detected-name">Sin coincidencia</strong>
+                <div class="meter"><span id="confidence-bar"></span></div>
+                <span class="mono hud-small" id="detected-confidence">Buscando patrón…</span>
+              </div>
+            </div>
+            <div class="history" id="history" aria-label="Historial de detecciones"></div>
+          </div>
+
+          <div class="hud hud-imu" aria-label="Lectura del IMU">
+            <span class="hud-kicker">IMU</span>
+            <dl>
+              <div><dt>P</dt><dd id="hud-pitch" class="mono">0°</dd></div>
+              <div><dt>Y</dt><dd id="hud-yaw" class="mono">0°</dd></div>
+              <div><dt>R</dt><dd id="hud-roll" class="mono">0°</dd></div>
+            </dl>
+          </div>
+
+          <div class="stage-toolbar" role="toolbar" aria-label="Controles de vista">
+            <div class="segmented" id="view-buttons"></div>
+            <div class="toolbar-group">
+              <button type="button" class="chip-btn" id="toggle-rotate" aria-pressed="false">
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16 10a6 6 0 1 1-1.8-4.3M16 3v3.5h-3.5" /></svg>
+                Auto-rotar
+              </button>
+              <button type="button" class="chip-btn" id="toggle-sensors" aria-pressed="true">
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h3l2-5 4 10 2-5h3" /></svg>
+                Sensores
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <aside class="sidebar" aria-label="Panel de control">
+          <section class="card">
+            <header class="card-head">
+              <h2>Biblioteca de señas</h2>
+              <span class="tag">Alfabeto manual</span>
+            </header>
+            <div class="sign-grid" id="sign-grid"></div>
+            <p class="sign-hint" id="sign-hint"></p>
+
+            <form class="spell" id="spell-form" autocomplete="off">
+              <div class="control-head">
+                <label for="spell-input">Deletrear palabra</label>
+                <span class="mono muted" id="supported-letters"></span>
+              </div>
+              <div class="spell-row">
+                <input id="spell-input" type="text" maxlength="18" placeholder="Ej. BOLA" spellcheck="false" />
+                <button type="submit" class="btn btn-primary" id="spell-button">Reproducir</button>
+              </div>
+              <div class="control-head spell-speed">
+                <label for="spell-speed">Tiempo por letra</label>
+                <output id="spell-speed-out" class="mono">1.1 s</output>
+              </div>
+              <input class="slider" type="range" id="spell-speed" min="300" max="1800" step="100" value="700" style="--fill: 28.6%" />
+              <div class="spell-tape" id="spell-tape" aria-live="polite"></div>
+            </form>
+          </section>
+
+          <section class="card">
+            <header class="card-head">
+              <h2>Sensores flex</h2>
+              <span class="tag mono">ADC 10 bits</span>
+            </header>
+            <div class="sensor-list" id="sensor-list"></div>
+          </section>
+
+          <section class="card">
+            <header class="card-head">
+              <h2>IMU · MPU6050</h2>
+              <span class="tag mono">±30°</span>
+            </header>
+            <div class="axis-list" id="axis-list"></div>
+            <p class="card-note">Doble clic en un control para volver a 0°.</p>
+          </section>
+
+          <section class="card card-actions">
+            <button type="button" class="btn" data-preset="open">Mano abierta</button>
+            <button type="button" class="btn" data-preset="fist">Puño</button>
+            <button type="button" class="btn btn-ghost" id="reset-sim">Restablecer</button>
+          </section>
+
+          <p class="sidebar-foot">Atajo: pulsa la tecla de una letra para reproducir su seña · <kbd>Esc</kbd> detiene la secuencia.</p>
+        </aside>
+      </main>
+    </div>
+
+    <script type="module" src="/src/modelado3d/main.js"></script>
+  </body>
+</html>

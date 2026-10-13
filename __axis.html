@@ -1,0 +1,38 @@
+<!doctype html><html><body style="margin:0;background:#222">
+<canvas id="c" width="1200" height="800"></canvas>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+const p=new URLSearchParams(location.search);
+const canvas=document.getElementById('c');
+const r=new THREE.WebGLRenderer({canvas,antialias:true,preserveDrawingBuffer:true});
+r.setScissorTest(true);
+const gltf=await new GLTFLoader().loadAsync('/models/hand-prosthesis.glb');
+const configs=JSON.parse(p.get('cfg')||'[]');
+const camDir=new THREE.Vector3(...JSON.parse(p.get('cam')||'[1,0,0]')).normalize();
+const W=1200/ (configs.length<=3?configs.length:3), H=configs.length<=3?800:400;
+configs.forEach((cfg,i)=>{
+  const scene=new THREE.Scene();scene.background=new THREE.Color(0x303540);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x444444,2));const d=new THREE.DirectionalLight(0xffffff,2);d.position.set(3,2,1);scene.add(d);
+  const m=gltf.scene.clone(true); // SkeletonUtils needed for skinned clone; reload instead
+});
+async function make(cfg){
+  const g=await new GLTFLoader().loadAsync('/models/hand-prosthesis.glb');
+  const scene=new THREE.Scene();scene.background=new THREE.Color(0x303540);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x444444,2));const d=new THREE.DirectionalLight(0xffffff,2);d.position.set(3,2,1);scene.add(d);
+  g.scene.traverse(o=>{if(o.isMesh){o.material=new THREE.MeshStandardMaterial({color:0xdddddd,roughness:.5});o.frustumCulled=false;}});
+  scene.add(g.scene);
+  const bones={};g.scene.traverse(o=>{if(o.isBone)bones[o.name]=o;});
+  for(const [name,ax,deg] of cfg){const b=bones[name];const v=new THREE.Vector3(...ax).normalize();b.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(v,deg*Math.PI/180));}
+  scene.updateMatrixWorld(true);
+  const hp=new THREE.Vector3();bones['Hand'].getWorldPosition(hp);
+  const ah=new THREE.AxesHelper(0.25);bones['Hand'].add(ah);ah.material.depthTest=false;ah.renderOrder=9;
+  const ta=new THREE.AxesHelper(0.12);bones['Thumb_1'].add(ta);ta.material.depthTest=false;
+  const cam=new THREE.PerspectiveCamera(35,W/H,0.01,50);
+  const tgt=hp.clone().add(new THREE.Vector3(0,-0.35,0));cam.position.copy(tgt).addScaledVector(camDir,1.6);cam.lookAt(tgt);
+  return {scene,cam};
+}
+const items=[];for(const c of configs)items.push(await make(c));
+items.forEach(({scene,cam},i)=>{const x=(i%3)*W,y=800-H-Math.floor(i/3)*H;r.setViewport(x,y,W,H);r.setScissor(x,y,W,H);r.render(scene,cam);});
+document.title='DONE';
+</script></body></html>
