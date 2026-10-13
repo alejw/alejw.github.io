@@ -806,51 +806,91 @@ kbd {
     height: auto;
     min-height: 100%;
     overflow: auto;
+    overflow-x: hidden;
   }
 
   .app {
-    width: min(100% - 18px, 100%);
+    width: calc(100% - 24px);
     height: auto;
-    padding-top: 12px;
+    padding: 12px 0 24px;
+    gap: 14px;
   }
 
   .topbar {
-    padding: 14px;
-    align-items: flex-start;
-    flex-direction: column;
+    padding: 16px;
+    gap: 12px;
   }
 
   .brand {
     width: 100%;
+    gap: 11px;
+  }
+
+  .brand-mark {
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+  }
+
+  .brand-sub {
+    max-width: 34ch;
+    line-height: 1.45;
   }
 
   .topbar-meta {
     width: 100%;
     justify-content: flex-start;
+    gap: 8px;
   }
 
   .workspace {
     height: auto;
+    gap: 14px;
   }
 
-  .stage,
+  .stage {
+    height: min(72svh, 680px);
+    min-height: 520px;
+    border-radius: 24px;
+  }
+
   .stage-canvas {
-    min-height: 440px;
-    height: 58vh;
+    height: 100%;
+    min-height: 0;
   }
 
   .stage-toolbar {
-    position: static;
-    padding: 12px 12px 0;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
     pointer-events: auto;
     display: flex;
     flex-direction: column;
     align-items: stretch;
+    gap: 8px;
   }
 
   .segmented {
     width: 100%;
     justify-content: space-between;
+    gap: 4px;
+  }
+
+  .segmented button {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 42px;
+  }
+
+  .toolbar-group {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .chip-btn {
+    justify-content: center;
+    min-height: 42px;
   }
 
   .stage-loader {
@@ -861,16 +901,135 @@ kbd {
     left: 12px;
     right: 12px;
     width: auto;
-    bottom: 12px;
+    bottom: 126px;
+    padding: 10px 11px 9px;
+  }
+
+  .hud-main {
+    grid-template-columns: 58px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .hud-letter {
+    min-height: 54px;
+    border-radius: 13px;
+    font-size: 1.7rem;
+  }
+
+  .hud-body strong {
+    font-size: 0.88rem;
+    margin-bottom: 5px;
+  }
+
+  .hud-small {
+    font-size: 0.72rem;
+  }
+
+  .hud-kicker {
+    margin-bottom: 6px;
+    font-size: 0.64rem;
   }
 
   .hud-imu {
     right: 12px;
     top: 12px;
-    width: 180px;
+    width: min(180px, calc(100% - 24px));
+  }
+
+  .sidebar {
+    gap: 14px;
+    padding: 0;
+  }
+
+  .card {
+    padding: 18px;
+    border-radius: 20px;
+  }
+
+  .card-head {
+    margin-bottom: 18px;
+  }
+
+  .sign-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 9px;
+  }
+
+  .sign-tile {
+    min-height: 58px;
+    font-size: 1.25rem;
+  }
+
+  .sensor,
+  .axis {
+    gap: 10px;
+    padding: 12px;
+  }
+
+  input[type='range'] {
+    height: 10px;
+  }
+
+  input[type='range']::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+  }
+
+  input[type='range']::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+  }
+
+  .spell-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .spell-row .btn {
+    min-height: 46px;
   }
 
   .card-actions {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .card-actions .btn-ghost {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 380px) {
+  .app {
+    width: calc(100% - 18px);
+  }
+
+  .brand-sub {
+    font-size: 0.72rem;
+  }
+
+  .pill {
+    padding: 7px 9px;
+    font-size: 0.68rem;
+  }
+
+  .hud-detect {
+    bottom: 152px;
+  }
+
+  .hud-main {
+    grid-template-columns: 52px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .hud-letter {
+    min-height: 50px;
+    font-size: 1.55rem;
+  }
+
+  .hud-small {
+    font-size: 0.68rem;
+  }
+
+  .sign-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
